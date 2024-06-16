@@ -1,28 +1,73 @@
-<!doctype html>
-<html lang=en>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset=utf-8>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Congratulations | Cloud Run</title>
-<link href="https://fonts.googleapis.com/css?family=Roboto" rel="preload" as="font">
-<link href="/static/cloud-run-32-color.png" rel="icon" type="image/png" />
-<link href="/static/style.css" rel="stylesheet" type="text/css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Song Maker 3000</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-	<div class="container">
-		<div class="hero">
-			<div style="text-align:center;">
-				<picture>
-					<source srcset="/static/celebration-dark.svg" media="(prefers-color-scheme: dark)">
-					<img src="/static/celebration.svg" alt="A group celebrating" width="427" height="231">
-				</picture>
-			</div>
+    <div class="container text-center">
+        <h1 class="display-4">Song Maker 3000</h1>
+        <div class="my-4">
+            <button id="startButton" class="btn btn-success btn-custom">Start Recording</button>
+            <button id="stopButton" class="btn btn-danger btn-custom">Stop Recording</button>
+            <button id="retry" class="btn btn-primary btn-custom" onclick="location.reload()">Retry</button>
+        </div>
+        <div id="output" class="alert alert-info" role="alert"></div>
+        <div id="tablature" class="mt-4"></div>
+    </div>
 
-			<div class="message">
-				<h1>{{message}}</h1>
-				<h2>Congratulations, you successfully deployed a container image to Cloud Run</h2>
-			</div>
-		</div>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        document.getElementById('startButton').addEventListener('click', function() {
+            fetch('/start', {method: 'POST'})
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('output').innerText = data.status;
+                    document.getElementById('output').classList.remove('alert-danger');
+                    document.getElementById('output').classList.add('alert-info');
+                }).catch(error => {
+                    document.getElementById('output').innerText = 'Error starting recording';
+                    document.getElementById('output').classList.remove('alert-info');
+                    document.getElementById('output').classList.add('alert-danger');
+                });
+        });
+
+        document.getElementById('stopButton').addEventListener('click', function() {
+            fetch('/stop', {method: 'POST'})
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('output').innerText = data.status;
+                    document.getElementById('output').classList.remove('alert-danger');
+                    document.getElementById('output').classList.add('alert-info');
+                    const notes = data.notes;
+                    let tablature = '<pre>';
+                    for (let i = 6; i > 0; i--) {
+                        tablature += i + ' |-';
+                        for (let j = 0; j < notes.length; j++) {
+                            if (notes[j].string === i) {
+                                tablature += notes[j].fret + '-';
+                            } else {
+                                tablature += '--';
+                            }
+                        }
+                        tablature += '\n';
+                    }
+                    tablature += '</pre>';
+                    document.getElementById('tablature').innerHTML = tablature;
+                }).catch(error => {
+                    document.getElementById('output').innerText = 'Error stopping recording';
+                    document.getElementById('output').classList.remove('alert-info');
+                    document.getElementById('output').classList.add('alert-danger');
+                });
+        });
+    </script>
 </body>
 </html>
